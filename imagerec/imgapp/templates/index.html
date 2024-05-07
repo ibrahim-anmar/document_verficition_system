@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signature Checking</title>
+    <style>
+        img {
+            width: 300px;
+            height: 300px;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <h3>Signature Checking</h3>
+    <input type="file" accept="image/*" id="imageInput">
+    <button onclick="createImage()">Upload Image</button>
+
+    <h5>Your Image</h5>
+    <div id="yourImageContainer" class="image"></div>
+    <h5>Matching Image</h5>
+    <div id="matchingImageContainer" class="image"></div>
+    <hr>
+    <button id="checkButton">Check Signature</button>
+    <button id="logoutButton">Logout</button>
+
+    <script>
+        document.getElementById('logoutButton').addEventListener('click', function() {
+            fetch('/api/logout/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                credentials: 'same-origin' // Include cookies in the request
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = "/login"; // Redirect to the login page after logout
+                } else {
+                    throw new Error('Failed to logout');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        document.getElementById("checkButton").addEventListener("click", function() {
+            // Make sure to replace '/check-similarity/' with your actual API endpoint
+            fetch('check-similarity/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({}) // No data to send
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); // Handle response data as needed
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        const imageEndPoint = "http://127.0.0.1:8000/upload/";
+        const imageInput = document.querySelector('#imageInput');
+
+        const createImage = async () => {
+            let image = imageInput.files[0];
+
+            let formData = new FormData();
+            formData.append('image', image); // Key MUST be called 'image'
+
+            try {
+                const csrftoken = document.cookie.replace(/(?:(?:^|.*;)\s*csrftoken\s*=\s*([^;]*).*$)/i, '$1');
+                const response = await fetch(imageEndPoint, {
+                    method: "POST",
+                    headers: {'X-CSRFToken': csrftoken}, 
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const yourImageData = data.yourImage;
+                    const matchingImageData = data.matchingImage;
+                    displayImage(yourImageData, 'yourImageContainer');
+                    displayImage(matchingImageData, 'matchingImageContainer');
+                } else {
+                    console.error("Error uploading image:", await response.text());
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        };
+
+        function displayImage(data, containerId) {
+            const imageElement = document.createElement('img');
+            imageElement.src = `data:image/jpeg;base64,${data}`;
+            document.getElementById(containerId).appendChild(imageElement);
+        }
+    </script>
+
+    <input type="submit" onclick="gotoLoginPage()" value="Login" class="button" /> 
+    <script>
+        function gotoLoginPage() {     
+            window.location.href = "/login"; // Redirect to the login page
+        }
+    </script>
+
+    <input type="submit" onclick="gotoRegisterPage()" value="Register" class="button" />
+    <script>
+        function gotoRegisterPage() {
+            window.location.href = "/register"; // Redirect to the register page
+        }
+    </script>
+
+</body>
+</html>

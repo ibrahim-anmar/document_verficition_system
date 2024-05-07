@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+<h1>Register</h1>
+<form id="register-form">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required><br>    <!-- the name MUST be username -->
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required><br>       <!-- the name MUST be email -->
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required><br>       <!-- the name MUST be password -->
+    <button type="submit" id="register-button">Register</button>
+</form>
+<p id="message"></p>
+
+
+
+
+
+
+<script>
+    const registerForm = document.getElementById('register-form');
+    registerForm.addEventListener('submit', registerUser);
+
+    function registerUser(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        const data = {
+            username,
+            email,
+            password
+        };
+
+        const csrftoken = document.cookie.replace(/(?:(?:^|.*;)\s*csrftoken\s*=\s*([^;]*).*$)/i, '$1');    // CSRF Token for authentication, taken from the kookies
+        fetch('/api/register/', {
+            method: 'POST', // Set method to POST
+            headers: { 'Content-Type': 'application/json' , 'X-CSRFToken': csrftoken},  // MUST add the Content-Type and X-CSRFToken headers in your request
+            body: JSON.stringify(data) 
+        })
+        .then(response => response.json()) 
+        .then(data => {
+            const messageElement = document.getElementById('message');
+            if (data.error) {
+                messageElement.textContent = data.error;
+            } else {
+                messageElement.textContent = "Registration successful!";
+                // Optional, redirect to login page
+                window.location.href = "/login";
+                console.log("reg_data:",data)
+                
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const messageElement = document.getElementById('message');
+            messageElement.textContent = "An error occurred. Please try again.";
+        });
+    }
+
+
+</script>
+</body>
+</html>

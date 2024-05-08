@@ -93,11 +93,13 @@ class UploadImageView(APIView):
             with open(image_path, 'rb') as f:
                 image_data = base64.b64encode(f.read()).decode('utf-8')
 
-            matching_image_data = get_matchedImage_data_from_path(BASE_DIR + "/myimgs/1.jpg")
+            matching_image_data = get_matchedImage_data_from_path(BASE_DIR + "/myimgs/Nada.jpg") #chose the image for Administrator's signature
             global IMG_DIR
             IMG_DIR = os.path.join(BASE_DIR, 'signtures/', image.name)
             global MATCH_DIR
-            MATCH_DIR = os.path.join(BASE_DIR, 'myimgs/1.jpg')
+            MATCH_DIR = os.path.join(BASE_DIR, 'myimgs/Nada.jpg') 
+            #chose the image for Administrator's signature
+            #Administrator's signature: 1.jpg , Bashar.jpg , Nada.jpg
             return Response({
                 'message': 'Image uploaded and processed successfully!',
                 'yourImage': image_data,
@@ -127,16 +129,12 @@ class SimilarityCheckView(APIView):
         global MATCH_DIR
 
         similarity_value = image_processing(IMG_DIR, MATCH_DIR)
+        similarity_percentage = int(similarity_value * 100)
 
-        if similarity_value < 65:
-            return Response({'message': 'Signture are similar!'}, status=status.HTTP_200_OK)
+        if similarity_value <= 70:
+            return Response({'message': 'Signture are matched!', 'similarity': similarity_percentage}, status=status.HTTP_200_OK)
         else:
-            return Response({'message': 'Signture are not similar!'}, status=status.HTTP_200_OK)
-
-
-
-
-
+            return Response({'message': 'Signture are not matched!', 'similarity': similarity_percentage}, status=status.HTTP_200_OK)
 
 
 
